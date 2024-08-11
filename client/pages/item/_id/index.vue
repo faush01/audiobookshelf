@@ -51,6 +51,36 @@
               </template>
 
               <content-library-item-details :library-item="libraryItem" />
+
+              <div>
+                <div v-if="!isPodcast && progressPercent > 0" class="flex py-0.5">
+                  <div class="w-24 min-w-24 sm:w-32 sm:min-w-32">
+                    <span class="text-white text-opacity-60 uppercase text-sm">{{ $strings.LabelProgress }}</span>
+                  </div>
+                  <div>{{ Math.round(progressPercent * 100) }}%</div>
+                </div>
+
+                <div v-if="!isPodcast && progressPercent > 0" class="flex py-0.5">
+                  <div class="w-24 min-w-24 sm:w-32 sm:min-w-32">
+                    <span class="text-white text-opacity-60 uppercase text-sm">{{ $strings.LabelCurrent }}</span>
+                  </div>
+                  <div>{{ $elapsedPretty(userCurrentTime) }}</div>
+                </div>
+
+                <div v-if="!isPodcast && progressPercent > 0" class="flex py-0.5">
+                  <div class="w-24 min-w-24 sm:w-32 sm:min-w-32">
+                    <span class="text-white text-opacity-60 uppercase text-sm">{{ $strings.LabelRemaining }}</span>
+                  </div>
+                  <div>{{ $elapsedPretty(userTimeRemaining) }}</div>
+                </div>
+
+                <div v-if="!isPodcast && progressPercent > 0" class="flex py-0.5">
+                  <div class="w-24 min-w-24 sm:w-32 sm:min-w-32">
+                    <span class="text-white text-opacity-60 uppercase text-sm">{{ $strings.LabelStarted }}</span>
+                  </div>
+                  <div>{{ $formatDate(userProgressStartedAt, dateFormat) }} {{ $formatDate(userProgressStartedAt, timeFormat) }}</div>
+                </div>
+              </div>
             </div>
             <div class="hidden md:block flex-grow" />
           </div>
@@ -69,6 +99,19 @@
             <div v-for="episode in episodesDownloading" :key="episode.id" class="flex items-center">
               <widgets-loading-spinner />
               <p class="text-sm py-1 pl-4">{{ $strings.MessageDownloadingEpisode }} "{{ episode.episodeDisplayTitle }}"</p>
+            </div>
+          </div>
+
+          <!-- Progress -->
+          <div v-if="!isPodcast && progressPercent > 0" class="px-4 py-2 mt-4 bg-primary text-sm font-semibold rounded-md text-gray-100 relative max-w-max mx-auto md:mx-0" :class="resettingProgress ? 'opacity-25' : ''">
+            <p v-if="progressPercent < 1" class="leading-6">{{ $strings.LabelYourProgress }}: {{ Math.round(progressPercent * 100) }}%</p>
+            <p v-else class="text-xs">{{ $strings.LabelFinished }} {{ $formatDate(userProgressFinishedAt, dateFormat) }}</p>
+            <p v-if="progressPercent < 1 && !useEBookProgress" class="text-gray-200 text-xs">{{ $elapsedPretty(userCurrentTime) }} {{ $strings.LabelCurrent }}</p>
+            <p v-if="progressPercent < 1 && !useEBookProgress" class="text-gray-200 text-xs">{{ $getString('LabelTimeRemaining', [$elapsedPretty(userTimeRemaining)]) }}</p>
+            <p class="text-gray-400 text-xs pt-1">{{ $strings.LabelStarted }} {{ $formatDate(userProgressStartedAt, dateFormat) }}</p>
+
+            <div v-if="!resettingProgress" class="absolute -top-1.5 -right-1.5 p-1 w-5 h-5 rounded-full bg-bg hover:bg-error border border-primary flex items-center justify-center cursor-pointer" @click.stop="clearProgressClick">
+              <span class="material-symbols text-sm">close</span>
             </div>
           </div>
 
@@ -115,13 +158,6 @@
             </ui-context-menu-dropdown>
           </div>
 
-          <div class="my-4 w-full">
-            <p ref="description" id="item-description" dir="auto" class="text-base text-gray-100 whitespace-pre-line mb-1" :class="{ 'show-full': showFullDescription }">{{ description }}</p>
-            <button v-if="isDescriptionClamped" class="py-0.5 flex items-center text-slate-300 hover:text-white" @click="showFullDescription = !showFullDescription">
-              {{ showFullDescription ? $strings.ButtonReadLess : $strings.ButtonReadMore }} <span class="material-symbols text-xl pl-1">{{ showFullDescription ? 'expand_less' : 'expand_more' }}</span>
-            </button>
-          </div>
-
           <!-- progress table -->
           <div class="my-4 w-full" v-if="!isPodcast && progressPercent > 0">
             <table class="text-sm tracksTable">
@@ -146,6 +182,13 @@
                 </td>
               </tr>
             </table>
+          </div>
+
+          <div class="my-4 w-full">
+            <p ref="description" id="item-description" dir="auto" class="text-base text-gray-100 whitespace-pre-line mb-1" :class="{ 'show-full': showFullDescription }">{{ description }}</p>
+            <button v-if="isDescriptionClamped" class="py-0.5 flex items-center text-slate-300 hover:text-white" @click="showFullDescription = !showFullDescription">
+              {{ showFullDescription ? $strings.ButtonReadLess : $strings.ButtonReadMore }} <span class="material-symbols text-xl pl-1">{{ showFullDescription ? 'expand_less' : 'expand_more' }}</span>
+            </button>
           </div>
 
           <tables-chapters-table v-if="chapters.length" :library-item="libraryItem" class="mt-6" />
